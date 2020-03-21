@@ -51,6 +51,7 @@ private:
 	void uncleCheck(Node<T> *node);
 
 	void remove(Node<T> *node);
+	void removeFIX(Node<T>* node, bool leafs);
 
 	Node<T>* root;
 	Node<T>* leaf;
@@ -89,7 +90,7 @@ void RBTree<T>::Print()
 
 	if (index < size)
 	{
-		if (root->right != nullptr)
+		if (root->right != leaf)
 			Print(index, spaces + 4, root->right);
 		for (int i = 0; i < spaces; i++)
 			cout << ' ';
@@ -100,7 +101,7 @@ void RBTree<T>::Print()
 		}
 		else
 			cout << root->data << endl;
-		if (root->left != nullptr)
+		if (root->left != leaf)
 			Print(index, spaces + 4, root->left);
 		index++;
 	}
@@ -157,7 +158,7 @@ void RBTree<T>::Print(int index, int spaces, Node<T> *q)
 template<typename T>
 void RBTree<T>::insert(Node<T> *parent, T data)
 {
-	if (data <= parent->data)
+	if (data < parent->data)
 	{
 		if (parent->left != leaf)
 			insert(parent->left, data);
@@ -316,24 +317,25 @@ void RBTree<T>::uncleCheck(Node<T> *node)
 template<typename T>
 void RBTree<T>::remove(Node<T>* node)
 {
-
-
-
-
-	bool nodeColor = node->color;
-	Node<T>* leftChild = node->left;
-	Node<T>* rightChild = node->right;
-
-	if (node->left == node->right == leaf) // case 1: node doesn't have any non-leaf kids
+	if (node->left == leaf && node->right == leaf) // case 1: node doesn't have any non-leaf kids
 	{
 		if (node == root) // node is root
+		{
 			root = nullptr;
-		else if (node->parent->left == node) // node is left
-			node->parent->left = leaf;
-		else // node is right
-			node->parent->right = leaf;
-		delete node;
-		size--;
+			delete node;
+			size--;
+		}
+		else if (node->color == RED)
+		{
+			if (node->parent->left == node) // node is left
+				node->parent->left = leaf;
+			else // node is right
+				node->parent->right = leaf;
+			delete node;
+			size--;
+		}
+		else
+			removeFIX(node, true);
 	}
 	else if ((node->left != leaf) && (node->right == leaf)) // case 2.1: one child (left) isn't a leaf 
 	{
@@ -342,19 +344,27 @@ void RBTree<T>::remove(Node<T>* node)
 			root = node->left;
 			node->left->parent = nullptr;
 			node->left->color = BLACK;
+			delete node;
+			size--;
 		}
-		else if (node->parent->left == node) // node is left
+		else if (node->color == RED)
 		{
-			node->parent->left = node->left;
-			node->left->parent = node->parent;
+			if (node->parent->left == node) // node is left
+			{
+				node->parent->left = node->left;
+				node->left->parent = node->parent;
+			}
+			else // node is right
+			{
+				node->parent->right = node->left;
+				node->left->parent = node->parent;
+			}
+			delete node;
+			size--;
 		}
-		else // node is right
-		{
-			node->parent->right = node->left;
-			node->left->parent = node->parent;
-		}
-		delete node;
-		size--;
+		else
+			removeFIX(node, true);
+
 	}
 	else if ((node->right != leaf) && (node->left == leaf)) // case 2.2: one child (right) isn't a leaf
 	{
@@ -363,19 +373,26 @@ void RBTree<T>::remove(Node<T>* node)
 			root = node->right;
 			node->right->parent = nullptr;
 			node->right->color = BLACK;
+			delete node;
+			size--;
 		}
-		else if (node->parent->left == node) // node is left
+		else if (node->color == RED)
 		{
-			node->parent->left = node->right;
-			node->right->parent = node->parent;
+			if (node->parent->left == node) // node is left
+			{
+				node->parent->left = node->right;
+				node->right->parent = node->parent;
+			}
+			else // node is right
+			{
+				node->parent->right = node->right;
+				node->right->parent = node->parent;
+			}
+			delete node;
+			size--;
 		}
-		else // node is right
-		{
-			node->parent->right = node->right;
-			node->right->parent = node->parent;
-		}
-		delete node;
-		size--;
+		else
+			removeFIX(node, true);
 	}
 	else // case 3: both childs aren't leafs
 	{
@@ -384,11 +401,229 @@ void RBTree<T>::remove(Node<T>* node)
 			current = current->left;
 		node->data = current->data;
 		remove(current);
+	}	
+}
+
+template<typename T>
+void RBTree<T>::removeFIX(Node<T>* node, bool leafs)
+{
+	// Node there can be only RED an non-root, because of remove(Node<T>* node) construction
+	
+	
+	Node<T>* parent = node->parent;
+	bool nodeLeft; // will be used only in worst case. where node's childs are leafs;
+
+	if (leafs == true)
+	{
+		if (node->left != leaf) // case 0.1.1: one of node's childs (left) aren't leaf (if so, child can obly be RED)
+		{
+			node->left->parent = parent;
+			node->left->color = BLACK;
+			if (node == parent->left) // node is left
+				parent->left = node->left;
+			else // node is right
+				parent->right = node->left;
+			delete node;
+			size--;
+			return;
+		}
+		else if (node->right != leaf) // case 0.1.2: one of node's childs (right) aren't leaf (if so, child can obly be RED)
+		{
+			node->right->parent = parent;
+			node->right->color = BLACK;
+			if (node == parent->left) // node is left
+				parent->left = node->right;
+			else // node is right
+				parent->right = node->right;
+			delete node;
+			size--;
+			return;
+		}
+		else // case 0.2: both childs are leafs;
+		{
+			if (node == parent->left) // node is left
+			{
+				nodeLeft = true;
+				parent->left = leaf;
+			}
+			else // node is right
+			{
+				nodeLeft = false;
+				parent->right = leaf;
+			}
+			delete node;
+			size--;
+		}
+	}
+	
+
+	Node<T>* grandparent = parent->parent;
+	Node<T>* sibling;
+	if (leafs == true)
+	{
+		if (nodeLeft)
+			sibling = parent->right;
+		else
+			sibling = parent->left;
+	}
+	else
+	{
+		if (node == parent->left)
+		{
+			nodeLeft = true;
+			sibling = parent->right;
+		}
+			
+		else
+		{
+			nodeLeft = false;
+			sibling = parent->left;
+		}
+	}
+	
+	Node<T>* SL = sibling->left;
+	Node<T>* SR = sibling->right;
+
+
+	if (sibling->color == RED) // case 1, not final, continues into case 3, 4 or 5
+	{
+		parent->parent = sibling;
+		SL->parent = parent;
+		
+
+		if (root == parent)
+		{
+			root = sibling;
+			sibling->parent = nullptr;
+		}
+		else
+		{
+			if (grandparent->left == parent) // parent is left
+				grandparent->left = sibling;
+			else // parent is right
+				grandparent->right = sibling;
+			sibling->parent = grandparent;
+		}
+
+		if (nodeLeft == true)
+		{
+			parent->right = SL;
+			sibling->left = parent;
+		}
+		else
+		{
+			parent->left = SL;
+			sibling->right = parent;
+		}
+			
+		parent->color = RED;
+		sibling->color = BLACK;
+
+		sibling = SL; // because this case isn't final, wer are renaming sone of the nodes
+		SL = sibling->left;
+		SR = sibling->right;
+	}
+
+	if (parent->color == BLACK && sibling->color == BLACK && SL->color == BLACK && SR->color == BLACK) // case 2, not final, requires checking parent as node
+	{
+		sibling->color = RED;
+		removeFIX(parent, false);
 		return;
 	}
 
-	if (nodeColor == RED || size == 0) // red node deletion doesn't require further changes || no need to balance further with 0 nodes
+	if (sibling->color == BLACK && SL->color == BLACK && SR->color == BLACK && parent->color == RED) // case 3, final
+	{
+		parent->color = BLACK;
+		sibling->color = RED;
 		return;
-	
+	}
+		
+	if (nodeLeft == true) // left node scenarios
+	{
+		if (SL->color == RED && SR->color == BLACK) // case 4, not final, continues into case 5
+		{
+			SL->parent = parent;
+			parent->right = SL;
+			SL->right->parent = sibling;
+			sibling->left = SL->right;
+			SL->right = sibling;
+			sibling->parent = SL;
+			SL->color = BLACK;
+			sibling->color = RED;
+			sibling = SL;
+			SL = SL->left;
+			SR = sibling;
+		}
+
+		if (SR->color == RED) // case 5, final
+		{
+			sibling->color = parent->color;
+			parent->color = BLACK;
+			SR->color = BLACK;
+			parent->right = SL;
+			SL->parent = parent;
+			sibling->left = parent;
+			parent->parent = sibling;
+			if (root == parent)
+			{
+				root = sibling;
+				sibling->parent = nullptr;
+			}
+			else
+			{
+				sibling->parent = grandparent;
+				if (grandparent->left == parent) // parent is left
+					grandparent->left = sibling;
+				else // parent is right
+					grandparent->right = sibling;
+			}
+		}
+	}
+	else // right node case 
+	{
+		if (SR->color == RED && SL->color == BLACK) // case 4, not final, continues into case 5
+		{
+			SR->parent = parent;
+			parent->left = SR;
+			SR->left->parent = sibling;
+			sibling->right = SR->left;
+			SR->left = sibling;
+			sibling->parent = SR;
+			SR->color = BLACK;
+			sibling->color = RED;
+			sibling = SR;
+			SL = sibling;
+			SR = SR->right;
+		}
+
+		if (SL->color == RED) // case 5, final
+		{
+			sibling->color = parent->color;
+			parent->color = BLACK;
+			SL->color = BLACK;
+			parent->left = SR;
+			SR->parent = parent;
+			sibling->right = parent;
+			parent->parent = sibling;
+			if (root == parent)
+			{
+				root = sibling;
+				sibling->parent = nullptr;
+			}
+			else
+			{
+				sibling->parent = grandparent;
+				if (grandparent->left == parent) // parent is left
+					grandparent->left = sibling;
+				else // parent is right
+					grandparent->right = sibling;
+			}
+		}
+	}
+
+	// earlier leaf was able to gain unwelcome changes. It's more easy to just write down extra 4 lines than many if-elses throughout code
+	leaf->color = BLACK;
+	leaf->parent = nullptr;
+	leaf->left = nullptr;
+	leaf->right = nullptr;
 }
-++
