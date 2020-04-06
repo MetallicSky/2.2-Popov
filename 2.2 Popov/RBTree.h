@@ -1,7 +1,9 @@
 #pragma once
 
+#include "List.h"
 #include <iostream>
 #include <Windows.h>
+
 
 #define RED 0
 #define BLACK 1
@@ -17,10 +19,22 @@ class RBTree
 {
 public:
 	RBTree();
+	~RBTree();
 
 	void insert(T data);
-	void Print();
 	void remove(T data);
+	bool find(T data);
+	void clear();
+	
+
+	void print();
+	void get_data(List<T>& tree)
+	{
+		tree.clear();
+		if (size == 0)
+			return;
+		fillList(tree, root);
+	}
 
 private:
 
@@ -44,14 +58,17 @@ private:
 		}
 	};
 
-
-	void Print(int index, int spaces, Node<T> *q);
+	void print(int index, int spaces, Node<T> *q);
 
 	void insert(Node<T> *parent, T data);
 	void uncleCheck(Node<T> *node);
 
 	void remove(Node<T> *node);
 	void removeFIX(Node<T>* node, bool leafs);
+
+	void clear(Node<T>* node);
+
+	void fillList(List<T>& lst, Node<T>* current);
 
 	Node<T>* root;
 	Node<T>* leaf;
@@ -64,6 +81,12 @@ RBTree<T>::RBTree()
 	size = 0;
 	root = nullptr;
 	leaf = new Node<T>(NULL, nullptr, nullptr, nullptr, BLACK);
+}
+
+template<typename T>
+RBTree<T>::~RBTree()
+{
+	clear();
 }
 
 
@@ -83,7 +106,7 @@ void RBTree<T>::insert(T data)
 
 
 template<typename T>
-void RBTree<T>::Print()
+void RBTree<T>::print()
 {
 	int index = 0;
 	int spaces = 0;
@@ -91,7 +114,7 @@ void RBTree<T>::Print()
 	if (index < size)
 	{
 		if (root->right != leaf)
-			Print(index, spaces + 4, root->right);
+			print(index, spaces + 4, root->right);
 		for (int i = 0; i < spaces; i++)
 			cout << ' ';
 		if (root->color == BLACK)
@@ -102,7 +125,7 @@ void RBTree<T>::Print()
 		else
 			cout << root->data << endl;
 		if (root->left != leaf)
-			Print(index, spaces + 4, root->left);
+			print(index, spaces + 4, root->left);
 		index++;
 	}
 }
@@ -125,15 +148,45 @@ void RBTree<T>::remove(T data)
 	}
 }
 
+template<typename T>
+bool RBTree<T>::find(T data)
+{
+	if (size == 0)
+		return false;
+	Node<T>* current = root;
+	while (current != leaf)
+	{
+		if (data == current->data)
+			return true;
+		else if (data < current->data)
+			current = current->left;
+		else
+			current = current->right;
+	}
+	return false;
+}
+
+template<typename T>
+void RBTree<T>::clear()
+{
+	if (size == 0)
+		return;
+	clear(root->left);
+	clear(root->right);
+	delete root;
+	size--;
+}
+
+
 
 
 template<typename T>
-void RBTree<T>::Print(int index, int spaces, Node<T> *q)
+void RBTree<T>::print(int index, int spaces, Node<T> *q)
 {
 	if (index < size)
 	{
 		if (q->right != nullptr)
-			Print(index, spaces + 4, q->right);
+			print(index, spaces + 4, q->right);
 		for (int i = 0; i < spaces; i++)
 			cout << ' ';
 		if (q->color == BLACK)
@@ -149,7 +202,7 @@ void RBTree<T>::Print(int index, int spaces, Node<T> *q)
 			cout << q->data << endl;
 
 		if (q->left != nullptr)
-			Print(index, spaces + 4, q->left);
+			print(index, spaces + 4, q->left);
 		if (q != leaf)
 			index++;
 	}
@@ -238,7 +291,7 @@ void RBTree<T>::uncleCheck(Node<T> *node)
 				if (grandparent->parent->left == grandparent) // grandparent is left
 					grandparent->parent->left = parent;
 				else // grandparent is right
-					grandparent->parent->right == parent;
+					grandparent->parent->right = parent;
 			}
 			else // grand-grandparent don't exist => grandparent is a root => parent is root now
 				root = parent;
@@ -299,7 +352,7 @@ void RBTree<T>::uncleCheck(Node<T> *node)
 					grandparent->parent->right = parent;
 				}
 				else // grandparent is left
-					grandparent->parent->left == parent;
+					grandparent->parent->left = parent;
 			}
 			else // grand-grandparent don't exist => grandparent is a root => parent is root now
 				root = parent;
@@ -626,4 +679,25 @@ void RBTree<T>::removeFIX(Node<T>* node, bool leafs)
 	leaf->parent = nullptr;
 	leaf->left = nullptr;
 	leaf->right = nullptr;
+}
+
+template<typename T>
+void RBTree<T>::clear(Node<T>* node)
+{
+	if (node == leaf)
+		return;
+	clear(node->left);
+	clear(node->right);
+	delete node;
+	size--;
+}
+
+template<typename T>
+void RBTree<T>::fillList(List<T>& lst, Node<T>* current)
+{
+	if (current == leaf)
+		return;
+	fillList(lst, current->left);
+	lst.push_back(current->data);
+	fillList(lst, current->right);
 }

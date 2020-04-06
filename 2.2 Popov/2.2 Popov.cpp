@@ -1,7 +1,9 @@
 ﻿#include "pch.h"
 #include "RBTree.h"
+#include "List.h"
 #include <iostream>
 #include <Windows.h>
+#include <exception>
 
 
 using namespace std;
@@ -15,47 +17,54 @@ int main()
 		int number = rand() % 100;
 		cout << "\n\n step " << number << "\n\n";
 		test.insert(number);
-		test.Print();
+		test.print();
 	}*/
 	test.insert(41);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(67);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(34);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(0);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(69);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(24);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(67);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(67);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(78);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(58);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(62);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	test.insert(64);
-	test.Print();
+	test.print();
 	cout << "\n\n";
 	int number = 67;
 	cout << "\n\nRemoving " << number<< ":" << endl;
 	test.remove(number);
-	test.Print();
+	test.print();
+	number = 666;
+	cout << "\n\nElement " << number << " found: " << test.find(number) << endl;
+	test.print();
+	List<int> LNR;
+	test.get_data(LNR);
+
+	LNR.print_to_console();
 }
 
