@@ -1,9 +1,11 @@
 ﻿#include "pch.h"
 #include "RBTree.h"
+#include "Map.h"
 #include "List.h"
 #include <iostream>
 #include <Windows.h>
 #include <exception>
+#include <string>
 
 
 using namespace std;
@@ -11,60 +13,48 @@ using namespace std;
 
 int main()
 {
-	RBTree<int> test;
+	Map<string, int> test;
 	/*for (int i = 0; i < 10; i++)
 	{
-		int number = rand() % 100;
-		cout << "\n\n step " << number << "\n\n";
-		test.insert(number);
-		test.print();
+		int number0 = rand() % 100;
+		char number1 = rand() % 100;
+		cout << "\n\n step " << number0 << " - " << number1 << "\n\n";
+		test.insert(number0, number1);
+		test.printTree();
+		test.printList();
 	}*/
-	test.insert(41);
-	test.print();
+	
+	test.insert("Jan", 24);
+	test.printList();
 	cout << "\n\n";
-	test.insert(67);
-	test.print();
 	cout << "\n\n";
-	test.insert(34);
-	test.print();
+	test.insert("Feb", 34);
+	test.printList();
 	cout << "\n\n";
-	test.insert(0);
-	test.print();
+	test.insert("Mar", 24);
+	test.printList();
 	cout << "\n\n";
-	test.insert(69);
-	test.print();
+	test.insert("Apr", 34);
+	test.printList();
+	test.printTree();
 	cout << "\n\n";
-	test.insert(24);
-	test.print();
+	string key= "Apr";
+	cout << "\n\nRemoving " << key << ":" << endl;
+	test.remove(key);
+	test.printList();
+	test.printTree();
+	key = "Feb";
+	cout << "\n\nElement " << key << " has value: " << test.find(key) << endl;
+	test.printList();
+	
+	List<int> vls;
+	test.get_values(vls);
 	cout << "\n\n";
-	test.insert(67);
-	test.print();
-	cout << "\n\n";
-	test.insert(67);
-	test.print();
-	cout << "\n\n";
-	test.insert(78);
-	test.print();
-	cout << "\n\n";
-	test.insert(58);
-	test.print();
-	cout << "\n\n";
-	test.insert(62);
-	test.print();
-	cout << "\n\n";
-	test.insert(64);
-	test.print();
-	cout << "\n\n";
-	int number = 67;
-	cout << "\n\nRemoving " << number<< ":" << endl;
-	test.remove(number);
-	test.print();
-	number = 666;
-	cout << "\n\nElement " << number << " found: " << test.find(number) << endl;
-	test.print();
-	List<int> LNR;
-	test.get_data(LNR);
+	vls.print_to_console();
 
-	LNR.print_to_console();
+	List<string> kys;
+	test.get_keys(kys);
+	cout << "\n\n";
+	kys.print_to_console();
 }
 
